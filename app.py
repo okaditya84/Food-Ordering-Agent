@@ -7,7 +7,7 @@ from database import save_cart, get_cart, get_order_history
 from datetime import datetime, timedelta
 import time
 
-st.title("AI Food Order Chatbot - Professional Edition")
+st.title("AI Food Order Chatbot")
 
 # Session Management
 if 'session_id' not in st.session_state:
