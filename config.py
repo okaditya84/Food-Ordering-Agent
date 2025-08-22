@@ -8,7 +8,7 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Model Configuration
-DEFAULT_LLM_MODEL = "llama3-70b-8192"  # Groq model
+DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L12-v2"
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-12-v2"
 
@@ -54,7 +54,7 @@ DATABASE_CONFIG = {
 
 # UI Configuration
 UI_CONFIG = {
-    "page_title": "🍽️ AI Food Ordering Assistant",
+    "page_title": "🍽️ Food Ordering Agent",
     "theme": "light",
     "sidebar_width": 400,
     "chat_height": 600,
@@ -65,7 +65,7 @@ UI_CONFIG = {
 
 # Business Logic Configuration
 BUSINESS_CONFIG = {
-    "cart_timeout": 3600,  # 1 hour
+    "cart_timeout": 3600, 
     "max_cart_items": 50,
     "delivery_fee": 2.99,
     "tax_rate": 0.08,
@@ -86,7 +86,7 @@ PERSONALIZATION_CONFIG = {
     "learning_rate": 0.1,
     "min_orders_for_personalization": 3,
     "recommendation_algorithms": ["collaborative", "content_based", "hybrid"],
-    "preference_decay": 0.95,  # How much to decay old preferences
+    "preference_decay": 0.95,
     "max_user_preferences": 20
 }
 
@@ -98,9 +98,9 @@ ADVANCED_FEATURES = {
     "order_optimization": True,
     "predictive_ordering": True,
     "sentiment_analysis": True,
-    "multi_language": False,  # Can be enabled later
+    "multi_language": False,  
     "voice_ordering": True,
-    "image_recognition": False  # For future food image recognition
+    "image_recognition": False 
 }
 
 # Logging Configuration
@@ -126,7 +126,7 @@ ERROR_CONFIG = {
 
 # Performance Configuration
 PERFORMANCE_CONFIG = {
-    "cache_ttl": 300,  # 5 minutes
+    "cache_ttl": 300,
     "max_concurrent_requests": 10,
     "request_timeout": 30,
     "enable_caching": True,

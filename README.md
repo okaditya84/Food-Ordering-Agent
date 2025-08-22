@@ -20,6 +20,11 @@ This is a fully functional, professional-grade AI chatbot for placing food order
 pip install -r requirements.txt
 ```
 2. Replace GROQ_API_KEY in agent.py with your free Groq key (sign up at console.groq.com).
+2.1: Optional Step: You can also run:
+```bash
+python setup.py
+```
+(This will set up things for your system, like the checking virtual env, API keys and all the libraries installation)
 3. Run the app:
 ```bash
 streamlit run main_application.py
