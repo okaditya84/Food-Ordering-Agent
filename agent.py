@@ -1,4 +1,4 @@
-# agent.py (Enhanced Agent with Improved Tools and Prompt)
+# agent.py
 
 from langchain_groq import ChatGroq
 from langchain.agents import Tool, create_react_agent, AgentExecutor
@@ -11,8 +11,8 @@ import re
 from database import insert_order, get_order_history, get_cart, cancel_order, save_cart
 from rag import retrieve_relevant_menu
 
-GROQ_API_KEY = os.getenv("GROQ_API")
-llm = ChatGroq(model="openai/gpt-oss-20b", api_key=GROQ_API_KEY, temperature=0.5)  # Lower temp for more determinism
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+llm = ChatGroq(model="openai/gpt-oss-20b", groq_api_key=GROQ_API_KEY, temperature=0.5)
 
 # Enhanced DB Interact Tool
 def db_interact(input_str):
@@ -46,11 +46,19 @@ db_tool = Tool(
     description="Use to insert orders or get history. Input must be a valid JSON string, e.g., '{\"action\": \"insert_order\", \"session_id\": \"id\", \"items\": [...], \"customer_details\": {...}, \"promo\": \"SAVE10\" optional}'. For insert_order, include 'items' list, 'session_id', 'customer_details': {'name': str, 'phone': str (10 digits), 'address': str}, optional 'promo':'SAVE10' for 10% discount."
 )
 
-# Menu Retrieval Tool
+# Menu Retrieval Tool (Updated to Accept JSON Input)
+def menu_retriever(input_str):
+    try:
+        data = json.loads(input_str)
+        query = data["query"]
+        return retrieve_relevant_menu(query)
+    except Exception as e:
+        return str(e)
+
 menu_tool = Tool(
     name="Menu_Retriever",
-    func=retrieve_relevant_menu,
-    description="Retrieve relevant menu items based on query. Use for finding item names, prices, descriptions. Input: plain string query, e.g., 'pizza' or 'toppings for pizza'. Do not use JSON for this tool."
+    func=menu_retriever,
+    description="Retrieve relevant menu items based on query. Use for finding item names, prices, descriptions. Input: valid JSON string, e.g., '{\"query\": \"pizza\"}' or '{\"query\": \"toppings for pizza\"}'."
 )
 
 # Enhanced Cart Interact Tool
@@ -96,10 +104,11 @@ cart_tool = Tool(
     description="Manage user cart. Input must be a valid JSON string, e.g., '{\"action\": \"add_item\", \"session_id\": \"id\", \"item\": {\"name\": \"Pizza\", \"price\": 12.99, \"quantity\": 1}}'. Actions: add_item (with 'item' dict: {'name', 'price', 'quantity'}), remove_item ('name', optional 'quantity'), clear_cart, get_cart. Always include 'session_id'."
 )
 
-# Cancel Order Tool
+# Cancel Order Tool (Updated to Accept JSON Input)
 def cancel_order_tool(input_str):
     try:
-        order_id = int(input_str)
+        data = json.loads(input_str)
+        order_id = int(data["order_id"])
         return cancel_order(order_id)
     except Exception as e:
         return str(e)
@@ -107,12 +116,12 @@ def cancel_order_tool(input_str):
 cancel_tool = Tool(
     name="Cancel_Order",
     func=cancel_order_tool,
-    description="Cancel a pending order by order_id. Input: order_id as plain string, e.g., '123'. Do not use JSON for this tool."
+    description="Cancel a pending order by order_id. Input: valid JSON string, e.g., '{\"order_id\": \"123\"}'."
 )
 
 tools = [db_tool, menu_tool, cart_tool, cancel_tool]
 
-# Enhanced Custom Prompt with Explicit Input Formats and Anti-Hallucination Rules
+# Enhanced Custom Prompt with Consistent JSON Input for All Tools
 PREFIX = """You are a professional, helpful food ordering assistant. Handle natural language queries intelligently, including multi-item orders like '2 pizzas and a burger', menu browsing, cart management, customer details collection, order confirmation, cancellation, and storage. 
 
 Key Guidelines:
@@ -129,7 +138,7 @@ Key Guidelines:
 - For history: Use DB_Interact get_history and present nicely.
 - For cancellation: Check if pending via history, then use Cancel_Order.
 - Be conversational, polite, handle errors gracefully, suggest alternatives if item not found. Stick strictly to retrieved information; do not assume or invent additional options like toppings unless explicitly in menu retrieval.
-- IMPORTANT: For each tool, use the exact input format specified in its description. For Menu_Retriever and Cancel_Order, input is plain string. For DB_Interact and Cart_Interact, input is JSON string.
+- IMPORTANT: For ALL tools, input is a valid JSON string as specified in each tool's description. Ensure the Action Input is exactly a JSON string without extra quotes or escapes.
 
 You have access to the following tools:"""
 
@@ -138,7 +147,7 @@ FORMAT_INSTRUCTIONS = """Use the following format:
 Question: the input question you must answer
 Thought: you should always think about what to do step by step
 Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action (follow the exact format: plain string for Menu_Retriever and Cancel_Order, JSON string for others; no extra quotes or escapes)
+Action Input: the input to the action (exactly a JSON string as per tool description; no extra text)
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
@@ -159,7 +168,7 @@ agent_executor = AgentExecutor(
     agent=agent,
     tools=tools,
     verbose=True,
-    handle_parsing_errors="Please check your output format carefully and try again. Ensure Action Input matches the tool's required format exactly.",
+    handle_parsing_errors="Please check your output format carefully and try again. Ensure Action Input is exactly a valid JSON string as required.",
     max_iterations=15
 )
 
