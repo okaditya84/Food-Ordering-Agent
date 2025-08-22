@@ -97,9 +97,9 @@ class AdvancedNaturalLanguageProcessor:
         """Create LLM instance for NLU processing"""
         try:
             return ChatGroq(
-                model="llama3-70b-8192",
+                model="openai/gpt-oss-20b",
                 groq_api_key=GROQ_API_KEY,
-                temperature=0.1,
+                temperature=0.3,
                 max_tokens=2048
             )
         except Exception as e:

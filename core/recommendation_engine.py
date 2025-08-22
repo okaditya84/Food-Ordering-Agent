@@ -45,7 +45,7 @@ class PersonalizationEngine:
                 model="llama-3.3-70b-versatile",
                 groq_api_key=GROQ_API_KEY,
                 temperature=0.3,
-                max_tokens=1024
+                max_tokens=2048
             )
         except Exception as e:
             print(f"Failed to create LLM for personalization: {e}")

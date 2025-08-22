@@ -50,10 +50,10 @@ class IntelligentFoodAgent:
     def _create_llm(self) -> ChatGroq:
         """Create the main LLM for the agent"""
         return ChatGroq(
-            model="llama3-70b-8192",
+            model="openai/gpt-oss-20b",
             groq_api_key=GROQ_API_KEY,
-            temperature=self.config.get("temperature", 0.1),
-            max_tokens=self.config.get("max_tokens", 2048)
+            temperature=self.config.get("temperature", 0.4),
+            max_tokens=self.config.get("max_tokens", 4096)
         )
     
     def _create_agent(self) -> AgentExecutor:

@@ -33,10 +33,10 @@ class QueryExpansionEngine:
     def _create_llm(self) -> Optional[ChatGroq]:
         try:
             return ChatGroq(
-                model="llama3-70b-8192",
+                model="openai/gpt-oss-20b",
                 groq_api_key=GROQ_API_KEY,
-                temperature=0.3,
-                max_tokens=512
+                temperature=0.5,
+                max_tokens=1028
             )
         except Exception as e:
             print(f"Failed to create LLM for query expansion: {e}")
@@ -165,9 +165,9 @@ class IntelligentReranker:
     def _create_llm(self):
         try:
             return ChatGroq(
-                model="llama3-70b-8192",
+                model="openai/gpt-oss-20b",
                 groq_api_key=GROQ_API_KEY,
-                temperature=0.1,
+                temperature=0.5,
                 max_tokens=1024
             )
         except Exception:
@@ -297,9 +297,9 @@ class IntelligentKnowledgeRetrieval:
     def _create_llm(self):
         try:
             return ChatGroq(
-                model="llama3-70b-8192",
+                model="openai/gpt-oss-20b",
                 groq_api_key=GROQ_API_KEY,
-                temperature=0.2,
+                temperature=0.5,
                 max_tokens=1024
             )
         except Exception:
