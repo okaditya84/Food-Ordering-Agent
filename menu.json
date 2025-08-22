@@ -1,0 +1,40 @@
+[
+    {
+        "category": "Appetizers",
+        "items": [
+            {"name": "Spring Rolls", "price": 5.99, "description": "Crispy vegetable-filled rolls served with sweet chili sauce."},
+            {"name": "Garlic Bread", "price": 4.49, "description": "Toasted bread slices topped with garlic butter and herbs."},
+            {"name": "Cheese Nachos", "price": 6.99, "description": "Crispy nachos loaded with melted cheese, jalapenos, and salsa."},
+            {"name": "Chicken Wings", "price": 7.49, "description": "Spicy buffalo wings with blue cheese dip."}
+        ]
+    },
+    {
+        "category": "Main Courses",
+        "items": [
+            {"name": "Margherita Pizza", "price": 12.99, "description": "Classic pizza with fresh tomato sauce, mozzarella, and basil."},
+            {"name": "Chicken Burger", "price": 9.99, "description": "Grilled chicken patty with lettuce, tomato, onion, and mayo in a sesame bun."},
+            {"name": "Pasta Alfredo", "price": 11.49, "description": "Fettuccine pasta in a creamy parmesan sauce with garlic."},
+            {"name": "Veggie Stir Fry", "price": 10.99, "description": "Mixed vegetables stir-fried with soy sauce and tofu."},
+            {"name": "Grilled Salmon", "price": 15.99, "description": "Fresh salmon fillet grilled with lemon herb butter."},
+            {"name": "Beef Tacos", "price": 8.99, "description": "Soft tacos filled with seasoned beef, lettuce, cheese, and salsa."}
+        ]
+    },
+    {
+        "category": "Desserts",
+        "items": [
+            {"name": "Chocolate Cake", "price": 6.99, "description": "Rich moist chocolate layer cake with fudge frosting."},
+            {"name": "Ice Cream Sundae", "price": 5.49, "description": "Vanilla ice cream topped with chocolate syrup, nuts, and cherry."},
+            {"name": "Tiramisu", "price": 7.49, "description": "Italian dessert with coffee-soaked ladyfingers and mascarpone cream."},
+            {"name": "Fruit Salad", "price": 4.99, "description": "Fresh seasonal fruits mixed with honey yogurt dressing."}
+        ]
+    },
+    {
+        "category": "Beverages",
+        "items": [
+            {"name": "Coke", "price": 2.49, "description": "Chilled Coca-Cola soda."},
+            {"name": "Fresh Lemonade", "price": 3.49, "description": "Homemade lemonade with mint."},
+            {"name": "Coffee", "price": 2.99, "description": "Hot brewed coffee."},
+            {"name": "Green Tea", "price": 2.79, "description": "Refreshing hot green tea."}
+        ]
+    }
+]
