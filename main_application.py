@@ -1,22 +1,19 @@
 import streamlit as st
 import uuid
 import json
-import asyncio
 from datetime import datetime, timedelta
-import time
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import Dict, List, Any
+
 
 # Import core components
 from core.ai_agent import process_query, get_agent_status, reset_agent_session
 from database import (
-    save_cart, get_cart, get_order_history, get_conversations,
-    get_sales_insights, log_conversation
+    get_cart, get_order_history,
+    get_sales_insights
 )
 from core.recommendation_engine import get_personalized_recommendations, analyze_user_preferences
 from core.knowledge_retrieval import search_menu
-from config import get_config, UI_CONFIG
 
 # Page configuration
 st.set_page_config(

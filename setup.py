@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import json
 from pathlib import Path
 
 def check_python_version():

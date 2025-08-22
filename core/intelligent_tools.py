@@ -1,20 +1,16 @@
 import json
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-import asyncio
 
 from langchain.tools import tool
 from langchain_groq import ChatGroq
-from langchain_core.prompts import PromptTemplate
 
-from config import get_config, GROQ_API_KEY
+from config import GROQ_API_KEY
 from database import (
-    get_cart, save_cart, insert_order, get_order_history, 
-    cancel_order, log_conversation, get_conversations
+    get_cart, save_cart, insert_order, get_order_history
 )
-from core.knowledge_retrieval import search_menu, get_menu_recommendations
+from core.knowledge_retrieval import search_menu
 from core.recommendation_engine import get_personalized_recommendations, analyze_user_preferences
 from core.natural_language_processor import process_user_input
 

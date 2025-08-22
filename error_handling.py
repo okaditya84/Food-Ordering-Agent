@@ -1,12 +1,12 @@
 import logging
 import traceback
 import functools
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Union
 from datetime import datetime
 from enum import Enum
 import json
 
-from config import get_config, ERROR_CONFIG, LOGGING_CONFIG
+from config import ERROR_CONFIG, LOGGING_CONFIG
 
 # Configure logging
 logging.basicConfig(

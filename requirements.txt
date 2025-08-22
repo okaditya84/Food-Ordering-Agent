@@ -3,7 +3,6 @@ langchain-groq
 langchain-community
 langchain-huggingface
 langgraph
-langchain-experimental
 langchain-core
 faiss-cpu
 chromadb
@@ -11,8 +10,6 @@ sentence-transformers
 tiktoken
 transformers
 streamlit
-fastapi
-uvicorn
 python-multipart
 pandas
 numpy
@@ -20,7 +17,6 @@ sqlalchemy
 sqlmodel
 torch
 scikit-learn
-openai
 rapidfuzz
 fuzzywuzzy
 python-Levenshtein
@@ -41,7 +37,6 @@ aiohttp
 asyncio-throttle
 pytest
 pytest-asyncio
-black
 flake8
 mypy
 redis

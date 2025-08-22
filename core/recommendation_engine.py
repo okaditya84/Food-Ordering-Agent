@@ -1,16 +1,12 @@
 import json
-import sqlite3
 from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+from datetime import datetime
+from dataclasses import dataclass
 from collections import defaultdict, Counter
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.cluster import KMeans
 
 from config import get_config, GROQ_API_KEY
-from database import get_order_history, get_conversations, log_conversation
+from database import get_order_history, log_conversation
 from langchain_groq import ChatGroq
 
 @dataclass
@@ -21,7 +17,7 @@ class UserPreference:
     frequency: int
     last_ordered: datetime
     dietary_tags: List[str]
-    price_sensitivity: float = 0.5  # 0 = price insensitive, 1 = very price sensitive
+    price_sensitivity: float = 0.5 
 
 @dataclass
 class RecommendationItem:
@@ -46,7 +42,7 @@ class PersonalizationEngine:
     def _create_llm(self) -> Optional[ChatGroq]:
         try:
             return ChatGroq(
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 groq_api_key=GROQ_API_KEY,
                 temperature=0.3,
                 max_tokens=1024

@@ -1,21 +1,17 @@
-import json
 import asyncio
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Any
+from dataclasses import dataclass
 from enum import Enum
 
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferWindowMemory
 
 from config import get_config, GROQ_API_KEY
-from database import log_conversation, get_conversations, log_api_usage
+from database import log_conversation, get_conversations
 from core.natural_language_processor import process_user_input, IntentType
-from core.knowledge_retrieval import search_menu
-from core.recommendation_engine import get_personalized_recommendations, analyze_user_preferences
+from core.recommendation_engine import analyze_user_preferences
 from core.intelligent_tools import SMART_TOOLS
 
 class AgentState(Enum):
