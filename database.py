@@ -1,5 +1,3 @@
-# database.py (Robust Database Handling)
-
 import sqlite3
 import json
 from datetime import datetime

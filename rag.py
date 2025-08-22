@@ -1,5 +1,3 @@
-# rag.py (Improved RAG with Better Splitting and Embeddings)
-
 from langchain_community.document_loaders import JSONLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS

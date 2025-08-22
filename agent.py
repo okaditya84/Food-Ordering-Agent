@@ -1,5 +1,3 @@
-# agent.py
-
 from langchain_groq import ChatGroq
 from langchain.agents import Tool, create_react_agent, AgentExecutor
 from langchain.prompts import PromptTemplate

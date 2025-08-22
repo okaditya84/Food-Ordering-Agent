@@ -1,5 +1,3 @@
-# app.py (Enhanced Streamlit Front-End with Better Integration)
-
 import streamlit as st
 import uuid
 from agent import process_query

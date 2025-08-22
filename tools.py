@@ -4,10 +4,6 @@ from langchain.tools import tool
 from database import get_cart, save_cart, insert_order, get_order_history, cancel_order
 from rag import retrieve_relevant_menu
 
-# --- Tool Definitions ---
-
-# To make the tools more reliable, we use the @tool decorator, which
-# automatically infers the schema from the function's docstring and type hints.
 
 @tool
 def get_menu(query: str) -> str:
