@@ -1,4 +1,6 @@
 # AI Chatbot for Food Orders
+## Deployed Link: https://vyanjan.streamlit.app/
+(Please feel free to restart the app if prompted on the link, as this is a free tier deployment.)
 
 ## Overview
 This is a fully functional, professional-grade AI chatbot for placing food orders. It uses Streamlit for the UI, LangChain for agent-based conversation flow, Groq API for LLM inference (free tier), SQLite for database, and RAG for menu retrieval. The bot handles natural language queries intelligently, manages carts, applies promos, suggests items, and more.
