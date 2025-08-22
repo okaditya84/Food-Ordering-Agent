@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
-from database_enhanced import get_sales_insights, update_order_status, get_order_history
+from database import get_sales_insights, update_order_status, get_order_history
 import json
 
 def main():
