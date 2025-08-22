@@ -2,39 +2,366 @@
     {
         "category": "Appetizers",
         "items": [
-            {"name": "Spring Rolls", "price": 5.99, "description": "Crispy vegetable-filled rolls served with sweet chili sauce."},
-            {"name": "Garlic Bread", "price": 4.49, "description": "Toasted bread slices topped with garlic butter and herbs."},
-            {"name": "Cheese Nachos", "price": 6.99, "description": "Crispy nachos loaded with melted cheese, jalapenos, and salsa."},
-            {"name": "Chicken Wings", "price": 7.49, "description": "Spicy buffalo wings with blue cheese dip."}
+            {
+                "name": "Spring Rolls",
+                "price": 5.99,
+                "description": "Crispy vegetable-filled rolls served with sweet chili sauce.",
+                "ingredients": ["cabbage", "carrots", "bean sprouts", "mushrooms", "wrapper", "sweet chili sauce"],
+                "allergens": ["gluten", "soy"],
+                "dietary_tags": ["vegetarian", "dairy_free"],
+                "nutrition": {
+                    "calories": 180,
+                    "protein": 4,
+                    "carbs": 28,
+                    "fat": 6,
+                    "fiber": 3,
+                    "sodium": 420
+                },
+                "prep_time": 8,
+                "spice_level": 1,
+                "popularity_score": 0.85
+            },
+            {
+                "name": "Garlic Bread",
+                "price": 4.49,
+                "description": "Toasted bread slices topped with garlic butter and herbs.",
+                "ingredients": ["bread", "butter", "garlic", "parsley", "oregano"],
+                "allergens": ["gluten", "dairy"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 220,
+                    "protein": 6,
+                    "carbs": 32,
+                    "fat": 8,
+                    "fiber": 2,
+                    "sodium": 380
+                },
+                "prep_time": 5,
+                "spice_level": 0,
+                "popularity_score": 0.92
+            },
+            {
+                "name": "Cheese Nachos",
+                "price": 6.99,
+                "description": "Crispy nachos loaded with melted cheese, jalapenos, and salsa.",
+                "ingredients": ["tortilla chips", "cheddar cheese", "jalapenos", "salsa", "sour cream"],
+                "allergens": ["dairy", "gluten"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 450,
+                    "protein": 15,
+                    "carbs": 35,
+                    "fat": 28,
+                    "fiber": 4,
+                    "sodium": 890
+                },
+                "prep_time": 7,
+                "spice_level": 2,
+                "popularity_score": 0.88
+            },
+            {
+                "name": "Chicken Wings",
+                "price": 7.49,
+                "description": "Spicy buffalo wings with blue cheese dip.",
+                "ingredients": ["chicken wings", "buffalo sauce", "blue cheese", "celery"],
+                "allergens": ["dairy"],
+                "dietary_tags": ["gluten_free", "keto"],
+                "nutrition": {
+                    "calories": 380,
+                    "protein": 28,
+                    "carbs": 2,
+                    "fat": 28,
+                    "fiber": 0,
+                    "sodium": 1200
+                },
+                "prep_time": 12,
+                "spice_level": 3,
+                "popularity_score": 0.90
+            }
         ]
     },
     {
         "category": "Main Courses",
         "items": [
-            {"name": "Margherita Pizza", "price": 12.99, "description": "Classic pizza with fresh tomato sauce, mozzarella, and basil."},
-            {"name": "Chicken Burger", "price": 9.99, "description": "Grilled chicken patty with lettuce, tomato, onion, and mayo in a sesame bun."},
-            {"name": "Pasta Alfredo", "price": 11.49, "description": "Fettuccine pasta in a creamy parmesan sauce with garlic."},
-            {"name": "Veggie Stir Fry", "price": 10.99, "description": "Mixed vegetables stir-fried with soy sauce and tofu."},
-            {"name": "Grilled Salmon", "price": 15.99, "description": "Fresh salmon fillet grilled with lemon herb butter."},
-            {"name": "Beef Tacos", "price": 8.99, "description": "Soft tacos filled with seasoned beef, lettuce, cheese, and salsa."}
+            {
+                "name": "Margherita Pizza",
+                "price": 12.99,
+                "description": "Classic pizza with fresh tomato sauce, mozzarella, and basil.",
+                "ingredients": ["pizza dough", "tomato sauce", "mozzarella", "fresh basil", "olive oil"],
+                "allergens": ["gluten", "dairy"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 680,
+                    "protein": 28,
+                    "carbs": 85,
+                    "fat": 24,
+                    "fiber": 4,
+                    "sodium": 1450
+                },
+                "prep_time": 15,
+                "spice_level": 0,
+                "popularity_score": 0.95,
+                "customizable": true,
+                "size_options": ["small", "medium", "large"]
+            },
+            {
+                "name": "Chicken Burger",
+                "price": 9.99,
+                "description": "Grilled chicken patty with lettuce, tomato, onion, and mayo in a sesame bun.",
+                "ingredients": ["chicken breast", "sesame bun", "lettuce", "tomato", "onion", "mayonnaise"],
+                "allergens": ["gluten", "eggs"],
+                "dietary_tags": ["dairy_free"],
+                "nutrition": {
+                    "calories": 520,
+                    "protein": 35,
+                    "carbs": 42,
+                    "fat": 22,
+                    "fiber": 3,
+                    "sodium": 980
+                },
+                "prep_time": 12,
+                "spice_level": 0,
+                "popularity_score": 0.87,
+                "customizable": true
+            },
+            {
+                "name": "Pasta Alfredo",
+                "price": 11.49,
+                "description": "Fettuccine pasta in a creamy parmesan sauce with garlic.",
+                "ingredients": ["fettuccine", "heavy cream", "parmesan", "garlic", "butter"],
+                "allergens": ["gluten", "dairy"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 750,
+                    "protein": 22,
+                    "carbs": 68,
+                    "fat": 42,
+                    "fiber": 3,
+                    "sodium": 890
+                },
+                "prep_time": 10,
+                "spice_level": 0,
+                "popularity_score": 0.83
+            },
+            {
+                "name": "Veggie Stir Fry",
+                "price": 10.99,
+                "description": "Mixed vegetables stir-fried with soy sauce and tofu.",
+                "ingredients": ["broccoli", "bell peppers", "carrots", "snap peas", "tofu", "soy sauce", "ginger"],
+                "allergens": ["soy"],
+                "dietary_tags": ["vegan", "gluten_free", "dairy_free"],
+                "nutrition": {
+                    "calories": 320,
+                    "protein": 18,
+                    "carbs": 28,
+                    "fat": 16,
+                    "fiber": 8,
+                    "sodium": 780
+                },
+                "prep_time": 8,
+                "spice_level": 1,
+                "popularity_score": 0.78
+            },
+            {
+                "name": "Grilled Salmon",
+                "price": 15.99,
+                "description": "Fresh salmon fillet grilled with lemon herb butter.",
+                "ingredients": ["salmon fillet", "lemon", "herbs", "butter", "asparagus", "rice"],
+                "allergens": ["fish", "dairy"],
+                "dietary_tags": ["gluten_free", "keto"],
+                "nutrition": {
+                    "calories": 480,
+                    "protein": 42,
+                    "carbs": 8,
+                    "fat": 32,
+                    "fiber": 2,
+                    "sodium": 420
+                },
+                "prep_time": 18,
+                "spice_level": 0,
+                "popularity_score": 0.89
+            },
+            {
+                "name": "Beef Tacos",
+                "price": 8.99,
+                "description": "Soft tacos filled with seasoned beef, lettuce, cheese, and salsa.",
+                "ingredients": ["ground beef", "soft tortillas", "lettuce", "cheese", "salsa", "lime"],
+                "allergens": ["dairy", "gluten"],
+                "dietary_tags": [],
+                "nutrition": {
+                    "calories": 420,
+                    "protein": 24,
+                    "carbs": 32,
+                    "fat": 22,
+                    "fiber": 4,
+                    "sodium": 890
+                },
+                "prep_time": 10,
+                "spice_level": 2,
+                "popularity_score": 0.86
+            }
         ]
     },
     {
         "category": "Desserts",
         "items": [
-            {"name": "Chocolate Cake", "price": 6.99, "description": "Rich moist chocolate layer cake with fudge frosting."},
-            {"name": "Ice Cream Sundae", "price": 5.49, "description": "Vanilla ice cream topped with chocolate syrup, nuts, and cherry."},
-            {"name": "Tiramisu", "price": 7.49, "description": "Italian dessert with coffee-soaked ladyfingers and mascarpone cream."},
-            {"name": "Fruit Salad", "price": 4.99, "description": "Fresh seasonal fruits mixed with honey yogurt dressing."}
+            {
+                "name": "Chocolate Cake",
+                "price": 6.99,
+                "description": "Rich moist chocolate layer cake with fudge frosting.",
+                "ingredients": ["chocolate", "flour", "eggs", "butter", "sugar", "cocoa powder"],
+                "allergens": ["gluten", "dairy", "eggs"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 520,
+                    "protein": 8,
+                    "carbs": 68,
+                    "fat": 26,
+                    "fiber": 4,
+                    "sodium": 380
+                },
+                "prep_time": 5,
+                "spice_level": 0,
+                "popularity_score": 0.91
+            },
+            {
+                "name": "Ice Cream Sundae",
+                "price": 5.49,
+                "description": "Vanilla ice cream topped with chocolate syrup, nuts, and cherry.",
+                "ingredients": ["vanilla ice cream", "chocolate syrup", "whipped cream", "nuts", "cherry"],
+                "allergens": ["dairy", "nuts"],
+                "dietary_tags": ["vegetarian", "gluten_free"],
+                "nutrition": {
+                    "calories": 380,
+                    "protein": 6,
+                    "carbs": 45,
+                    "fat": 20,
+                    "fiber": 2,
+                    "sodium": 120
+                },
+                "prep_time": 3,
+                "spice_level": 0,
+                "popularity_score": 0.84
+            },
+            {
+                "name": "Tiramisu",
+                "price": 7.49,
+                "description": "Italian dessert with coffee-soaked ladyfingers and mascarpone cream.",
+                "ingredients": ["ladyfingers", "mascarpone", "coffee", "cocoa powder", "eggs", "sugar"],
+                "allergens": ["gluten", "dairy", "eggs"],
+                "dietary_tags": ["vegetarian"],
+                "nutrition": {
+                    "calories": 450,
+                    "protein": 9,
+                    "carbs": 42,
+                    "fat": 28,
+                    "fiber": 1,
+                    "sodium": 180
+                },
+                "prep_time": 5,
+                "spice_level": 0,
+                "popularity_score": 0.82
+            },
+            {
+                "name": "Fruit Salad",
+                "price": 4.99,
+                "description": "Fresh seasonal fruits mixed with honey yogurt dressing.",
+                "ingredients": ["mixed fruits", "yogurt", "honey", "mint"],
+                "allergens": ["dairy"],
+                "dietary_tags": ["vegetarian", "gluten_free"],
+                "nutrition": {
+                    "calories": 180,
+                    "protein": 6,
+                    "carbs": 38,
+                    "fat": 2,
+                    "fiber": 6,
+                    "sodium": 45
+                },
+                "prep_time": 5,
+                "spice_level": 0,
+                "popularity_score": 0.75
+            }
         ]
     },
     {
         "category": "Beverages",
         "items": [
-            {"name": "Coke", "price": 2.49, "description": "Chilled Coca-Cola soda."},
-            {"name": "Fresh Lemonade", "price": 3.49, "description": "Homemade lemonade with mint."},
-            {"name": "Coffee", "price": 2.99, "description": "Hot brewed coffee."},
-            {"name": "Green Tea", "price": 2.79, "description": "Refreshing hot green tea."}
+            {
+                "name": "Coke",
+                "price": 2.49,
+                "description": "Chilled Coca-Cola soda.",
+                "ingredients": ["carbonated water", "sugar", "caramel color", "caffeine"],
+                "allergens": [],
+                "dietary_tags": ["vegan", "gluten_free", "dairy_free"],
+                "nutrition": {
+                    "calories": 140,
+                    "protein": 0,
+                    "carbs": 39,
+                    "fat": 0,
+                    "fiber": 0,
+                    "sodium": 45
+                },
+                "prep_time": 1,
+                "spice_level": 0,
+                "popularity_score": 0.93
+            },
+            {
+                "name": "Fresh Lemonade",
+                "price": 3.49,
+                "description": "Homemade lemonade with mint.",
+                "ingredients": ["lemon juice", "water", "sugar", "fresh mint"],
+                "allergens": [],
+                "dietary_tags": ["vegan", "gluten_free", "dairy_free"],
+                "nutrition": {
+                    "calories": 120,
+                    "protein": 0,
+                    "carbs": 32,
+                    "fat": 0,
+                    "fiber": 0,
+                    "sodium": 5
+                },
+                "prep_time": 3,
+                "spice_level": 0,
+                "popularity_score": 0.79
+            },
+            {
+                "name": "Coffee",
+                "price": 2.99,
+                "description": "Hot brewed coffee.",
+                "ingredients": ["coffee beans", "water"],
+                "allergens": [],
+                "dietary_tags": ["vegan", "gluten_free", "dairy_free", "keto"],
+                "nutrition": {
+                    "calories": 5,
+                    "protein": 0,
+                    "carbs": 1,
+                    "fat": 0,
+                    "fiber": 0,
+                    "sodium": 5
+                },
+                "prep_time": 4,
+                "spice_level": 0,
+                "popularity_score": 0.88
+            },
+            {
+                "name": "Green Tea",
+                "price": 2.79,
+                "description": "Refreshing hot green tea.",
+                "ingredients": ["green tea leaves", "water"],
+                "allergens": [],
+                "dietary_tags": ["vegan", "gluten_free", "dairy_free", "keto"],
+                "nutrition": {
+                    "calories": 2,
+                    "protein": 0,
+                    "carbs": 0,
+                    "fat": 0,
+                    "fiber": 0,
+                    "sodium": 2
+                },
+                "prep_time": 3,
+                "spice_level": 0,
+                "popularity_score": 0.72
+            }
         ]
     }
 ]

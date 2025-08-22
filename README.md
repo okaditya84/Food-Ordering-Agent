@@ -22,16 +22,10 @@ pip install -r requirements.txt
 2. Replace GROQ_API_KEY in agent.py with your free Groq key (sign up at console.groq.com).
 3. Run the app:
 ```bash
-streamlit run app.py
+streamlit run main_application.py
 ```
-4. For admin dashboard:
-```bash
-streamlit run admin.py
-```
-5. Test: Chat with bot, add items, confirm orders, check admin.
 
-## GitHub Repo
-Upload to a public GitHub repo: https://github.com/yourusername/ai-food-chatbot (replace with your actual repo).
+4. Test: Chat with bot, add items, confirm orders, check admin.
 
 ## Notes
 - Uses free tools only: Groq (free API), HuggingFace (free embeddings), SQLite (local DB).
