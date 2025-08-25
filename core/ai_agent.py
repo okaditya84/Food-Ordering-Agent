@@ -61,43 +61,46 @@ class IntelligentFoodAgent:
         
         # Create the system prompt
         system_prompt = """
-        You are an ADVANCED FOOD ORDERING ASSISTANT with ROBUST order processing capabilities.
+        You are an ADVANCED FOOD ORDERING ASSISTANT with PERFECT order completion capabilities.
         
-        🧠 CORE INTELLIGENCE PRINCIPLES:
-        1. ANALYZE context before responding - don't repeat questions if information was already provided
-        2. BUILD PROGRESSIVELY on conversation - remember what user said before
-        3. BE EFFICIENT - use provided information immediately, ask only for CRITICAL missing details
-        4. USE SMART DEFAULTS - medium size, regular crust unless specified otherwise
-        5. COMBINE ACTIONS when possible - add items AND suggest related items
-        6. MAINTAIN CONTEXT throughout the entire order flow
+        🎯 CRITICAL ORDER COMPLETION RULES:
+        1. When user says "yes place order", "finalize", "confirm order", "place my order" → IMMEDIATELY call smart_order_confirmation
+        2. When user provides customer details (name, phone, address) → ALWAYS extract and prepare for order confirmation
+        3. NEVER ask for vegetarian main courses during order confirmation
+        4. ALWAYS maintain full conversation context and cart contents
+        5. Complete orders in MAXIMUM 2 tool calls - no more!
 
-        📋 ROBUST ORDER PROCESSING:
-        - Always extract session_id from input and use it in ALL tool calls
-        - Handle misspellings intelligently (marghetia → margherita)
-        - Apply preferences from conversation context automatically
-        - Guide users through complete order flow step-by-step
-        - Confirm all details before final order placement
-        - Handle errors gracefully with helpful suggestions
+        📋 CONVERSATION FLOW TRACKING:
+        - Track order status: Items Added → Details Collected → Ready to Confirm → Order Placed
+        - Remember ALL previous conversation details
+        - Extract session_id from input and use in ALL tool calls
+        - Handle misspellings automatically (marghetia → margherita)
 
-        ⚡ SMART BEHAVIOR FOR ORDER COMPLETION:
+        ⚡ EXACT BEHAVIOR FOR ORDER CONFIRMATION:
         
-        User: "2 margherita pizza delivery"
-        SMART Response: "Perfect! Adding 2 margherita pizzas to your cart." *calls smart_add_to_cart* "Added! For delivery, I'll need your name, phone, and address when you're ready to confirm."
+        User: "yes finalize" or "place order" or "confirm"
+        IMMEDIATE Action: Call smart_order_confirmation with ALL collected customer details
         
-        User: "small size, thin crust"
-        SMART Response: "Got it! Updating your pizzas to small size with thin crust." *updates cart* "Anything else, or ready to place your order?"
+        User provides: "name John, phone 123456, address xyz"
+        Response: "Perfect! I have your details. Ready to place your order?"
         
-        User: "confirm order"
-        SMART Response: *calls complete_order_flow* "Let me review your order and collect the final details..."
+        User: "yes"
+        IMMEDIATE Action: Call smart_order_confirmation to generate invoice and order ID
 
-        🛠️ ENHANCED TOOL USAGE:
-        - Use smart_add_to_cart for ANY item addition request
-        - Apply intelligent_menu_search for item queries or when items not found
-        - Use complete_order_flow when user wants to review/confirm order
-        - Use smart_order_confirmation only when all details are collected
-        - Always maintain conversation context between tool calls
+        🛠️ TOOL PRIORITY:
+        1. finalize_order_immediately - ALWAYS use when user says "yes", "place order", "confirm", "finalize"
+        2. smart_add_to_cart - for adding items
+        3. intelligent_menu_search - only for menu queries
+        4. complete_order_flow - for order status review
+        5. smart_order_confirmation - backup option
 
-        🎯 GOAL: Provide seamless, error-free food ordering with intelligent context awareness!
+        ❌ NEVER DO:
+        - Ask about vegetarian courses during order confirmation
+        - Lose conversation context
+        - Exceed 2 tool calls for order completion
+        - Ignore user's confirmation requests
+
+        🎯 SUCCESS CRITERIA: Generate order ID and invoice when user confirms!
         """
         
         # Create the prompt template without MessagesPlaceholder for chat_history
@@ -119,7 +122,7 @@ class IntelligentFoodAgent:
             agent=agent,
             tools=SMART_TOOLS,
             verbose=True,
-            max_iterations=5,
+            max_iterations=8,  # Increased for complex order flows
             handle_parsing_errors=True,
             return_intermediate_steps=False
         )
@@ -226,6 +229,16 @@ class IntelligentFoodAgent:
         """Determine if tools should be used based on intent and context"""
         intent = enhanced_input.get("intent", "")
         confidence = enhanced_input.get("confidence", 0.0)
+        user_input = enhanced_input.get("original_input", "").lower()
+        
+        # CRITICAL: Always use tools for order confirmation phrases
+        confirmation_phrases = [
+            "yes", "place order", "confirm", "finalize", "yes place order",
+            "yes finalize", "proceed", "go ahead", "submit order", "complete order"
+        ]
+        
+        if any(phrase in user_input for phrase in confirmation_phrases):
+            return True
         
         # High-confidence intents that typically need tools
         tool_requiring_intents = [
@@ -245,6 +258,10 @@ class IntelligentFoodAgent:
         
         # Use tools if menu items are mentioned
         if enhanced_input.get("menu_items"):
+            return True
+        
+        # Use tools for customer details (name, phone, address)
+        if any(keyword in user_input for keyword in ["name", "phone", "address", "delivery"]):
             return True
         
         # Use tools for complex queries (multiple entities)
@@ -316,6 +333,20 @@ class IntelligentFoodAgent:
                 agent_input = f"{user_input}\n\nSession ID: {session_id}"
                 if context_str:
                     agent_input += f"\nContext: {context_str}"
+                
+                # CRITICAL: Add order confirmation detection
+                user_input_lower = user_input.lower()
+                confirmation_signals = [
+                    "yes", "place order", "confirm", "finalize", "yes place order",
+                    "yes finalize", "proceed", "go ahead", "submit order", "complete order"
+                ]
+                
+                if any(signal in user_input_lower for signal in confirmation_signals):
+                    agent_input += f"\n\nCRITICAL: User wants to CONFIRM ORDER. Use finalize_order_immediately tool NOW to complete the order and generate invoice."
+                
+                # Add customer details if detected
+                if any(keyword in user_input_lower for keyword in ["name", "phone", "address"]):
+                    agent_input += f"\n\nNote: Customer details provided in this message - extract and use for order confirmation."
                 
                 # Get recent chat history for INTELLIGENT context
                 chat_history_str = ""

@@ -1105,6 +1105,183 @@ def smart_order_tracking(session_id: str, order_query: str = "") -> str:
         return f"I couldn't retrieve your order information. Error: {str(e)}"
 
 @tool
+def finalize_order_immediately(session_id: str, user_confirmation: str = "") -> str:
+    """
+    IMMEDIATE order finalization when user confirms. This tool bypasses all checks and places the order.
+    Use when user says 'yes', 'place order', 'confirm', 'finalize', etc.
+    """
+    try:
+        cart = get_cart(session_id)
+        
+        if not cart:
+            return "❌ Your cart is empty. Please add items before placing an order."
+        
+        # Get conversation history to extract customer details
+        from database import get_conversations
+        conversations = get_conversations(session_id, limit=15)
+        
+        # Extract customer information from ENTIRE conversation history
+        customer_info = {}
+        delivery_mode = 'delivery'  # Default
+        payment_method = 'cash'     # Default
+        
+        # Enhanced extraction patterns
+        for conv in conversations:
+            content = conv.get('content', '')
+            role = conv.get('role', '')
+            
+            if role == 'user' and content:
+                content_lower = content.lower()
+                
+                # Extract name with multiple patterns
+                name_patterns = [
+                    r'(?:name|i\'?m|this is|call me)\s+([a-zA-Z\s]{2,40})',
+                    r'^([A-Z][a-z]+\s+[A-Z][a-z]+)',  # First Last format
+                    r'([A-Z][a-z]+\s+[A-Z][a-z]+)',   # Anywhere in text
+                ]
+                
+                for pattern in name_patterns:
+                    match = re.search(pattern, content, re.IGNORECASE)
+                    if match and not customer_info.get('name'):
+                        name_candidate = match.group(1).strip().title()
+                        # Validate name (not common words)
+                        if not any(word in name_candidate.lower() for word in ['pizza', 'order', 'delivery', 'phone', 'address']):
+                            customer_info['name'] = name_candidate
+                            break
+                
+                # Extract phone with multiple patterns
+                phone_patterns = [
+                    r'\b(\d{10})\b',
+                    r'\b(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})\b',
+                ]
+                
+                for pattern in phone_patterns:
+                    match = re.search(pattern, content)
+                    if match and not customer_info.get('phone'):
+                        phone = re.sub(r'[^\d]', '', match.group(1))
+                        if len(phone) == 10:
+                            customer_info['phone'] = phone
+                            break
+                
+                # Extract address
+                address_patterns = [
+                    r'(?:address|deliver to|delivery)\s*[:\-]?\s*(.{10,100})',
+                    r'([A-Z][\w\s\-,#.]+(?:road|street|avenue|lane|park|sector|building|apartment|flat|house)[\w\s\-,#.]*)',
+                ]
+                
+                for pattern in address_patterns:
+                    match = re.search(pattern, content, re.IGNORECASE)
+                    if match and not customer_info.get('address'):
+                        address_candidate = match.group(1).strip()
+                        if len(address_candidate) > 5:
+                            customer_info['address'] = address_candidate
+                            break
+                
+                # Extract delivery mode
+                if 'delivery' in content_lower:
+                    delivery_mode = 'delivery'
+                elif 'pickup' in content_lower or 'pick up' in content_lower:
+                    delivery_mode = 'pickup'
+                
+                # Extract payment method
+                if 'upi' in content_lower:
+                    payment_method = 'upi'
+                elif 'cash' in content_lower:
+                    payment_method = 'cash'
+                elif 'card' in content_lower:
+                    payment_method = 'card'
+        
+        # Validate required information
+        missing_info = []
+        if not customer_info.get('name'):
+            missing_info.append('name')
+        if not customer_info.get('phone'):
+            missing_info.append('phone number')
+        if delivery_mode == 'delivery' and not customer_info.get('address'):
+            missing_info.append('delivery address')
+        
+        if missing_info:
+            return f"⚠️ I need your {' and '.join(missing_info)} to place the order. Please provide: {', '.join(missing_info)}"
+        
+        # Calculate order totals
+        subtotal = sum(item['price'] * item['quantity'] for item in cart)
+        delivery_charge = 2.99 if delivery_mode == 'delivery' and subtotal < 20 else 0
+        processing_fee = subtotal * 0.02 if payment_method in ['upi', 'card'] else 0
+        tax = (subtotal + delivery_charge) * 0.08
+        total = subtotal + delivery_charge + processing_fee + tax
+        
+        # Prepare order details
+        order_details = {
+            'name': customer_info['name'],
+            'phone': customer_info['phone'],
+            'address': customer_info.get('address', 'Pickup from restaurant'),
+            'delivery_mode': delivery_mode,
+            'payment_method': payment_method,
+            'special_instructions': '',
+        }
+        
+        # Insert order and get order ID
+        order_id = insert_order(session_id, cart, total, order_details)
+        
+        if not order_id:
+            return "❌ Failed to place order. Please try again or contact support."
+        
+        # Generate comprehensive order confirmation
+        items_summary = []
+        for item in cart:
+            item_line = f"{item['quantity']}x {item['name']}"
+            if item.get('size'):
+                item_line += f" ({item['size']})"
+            if item.get('crust'):
+                item_line += f" - {item['crust']} crust"
+            item_line += f" - ${item['price'] * item['quantity']:.2f}"
+            items_summary.append(item_line)
+        
+        # Delivery/pickup info
+        if delivery_mode == 'delivery':
+            service_info = f"🚚 Delivery to: {customer_info['address']}\n⏰ Estimated delivery: 25-35 minutes"
+        else:
+            service_info = f"🏪 Pickup from restaurant\n⏰ Ready for pickup: 15-20 minutes"
+        
+        # Payment info
+        payment_info = {
+            'cash': 'Cash on Delivery',
+            'card': 'Card Payment',
+            'upi': 'UPI Payment'
+        }.get(payment_method, payment_method.title())
+        
+        confirmation = f"""
+🎉 **ORDER CONFIRMED!**
+Order #{order_id}
+
+👤 **Customer Details:**
+• Name: {customer_info['name']}
+• Phone: {customer_info['phone']}
+
+🍽️ **Your Order:**
+{chr(10).join(f"• {item}" for item in items_summary)}
+
+💰 **Order Summary:**
+• Subtotal: ${subtotal:.2f}
+{f"• Delivery: ${delivery_charge:.2f}" if delivery_charge > 0 else "• Delivery: FREE"}
+{f"• Processing Fee: ${processing_fee:.2f}" if processing_fee > 0 else ""}
+• Tax (8%): ${tax:.2f}
+• **Total: ${total:.2f}**
+
+{service_info}
+💳 Payment: {payment_info}
+
+Thank you for your order! We'll start preparing it right away. 🍽️
+
+📞 Questions? Call us or track your order with ID #{order_id}
+        """.strip()
+        
+        return confirmation
+        
+    except Exception as e:
+        return f"❌ Error placing order: {str(e)}. Please try again."
+
+@tool
 def complete_order_flow(session_id: str, user_request: str = "") -> str:
     """
     Complete end-to-end order flow with intelligent guidance.
@@ -1242,6 +1419,7 @@ SMART_TOOLS = [
     smart_remove_from_cart,
     optimize_current_order,
     smart_order_confirmation,
+    finalize_order_immediately,
     get_smart_recommendations,
     analyze_nutritional_info,
     smart_order_tracking,
