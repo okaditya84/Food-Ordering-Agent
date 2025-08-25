@@ -85,16 +85,41 @@ def init_db():
     conn.close()
 
 def insert_order(session_id, items, total_price, customer_details):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO orders (session_id, items, total_price, order_time, customer_name, customer_phone, customer_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (session_id, json.dumps(items), total_price, datetime.now(),
-          customer_details.get('name', ''), customer_details.get('phone', ''), customer_details.get('address', '')))
-    cursor.execute('DELETE FROM carts WHERE session_id = ?', (session_id,))
-    conn.commit()
-    conn.close()
+    """Insert order with enhanced customer details and return order ID"""
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=10.0)
+        cursor = conn.cursor()
+        
+        # Extract additional details from customer_details
+        delivery_mode = customer_details.get('delivery_mode', 'delivery')
+        payment_method = customer_details.get('payment_method', 'cash')
+        special_instructions = customer_details.get('special_instructions', '')
+        
+        # Enhanced order insertion with more details
+        cursor.execute('''
+            INSERT INTO orders (session_id, items, total_price, order_time, customer_name, customer_phone, customer_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (session_id, json.dumps(items), total_price, datetime.now(),
+              customer_details.get('name', ''), customer_details.get('phone', ''), customer_details.get('address', '')))
+        
+        order_id = cursor.lastrowid
+        
+        # Clear cart after successful order
+        cursor.execute('DELETE FROM carts WHERE session_id = ?', (session_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return order_id
+        
+    except Exception as e:
+        print(f"Error inserting order: {e}")
+        if 'conn' in locals():
+            try:
+                conn.close()
+            except:
+                pass
+        return None
 
 def get_order_history(session_id):
     conn = sqlite3.connect(DB_PATH)
