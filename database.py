@@ -7,6 +7,7 @@ DB_PATH = 'orders.db'
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    
     # existing tables
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
@@ -21,12 +22,32 @@ def init_db():
             status TEXT DEFAULT 'Pending'
         )
     ''')
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS carts (
             session_id TEXT PRIMARY KEY,
-            items TEXT NOT NULL
+            items TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Migration: Add timestamp columns to existing carts table if they don't exist
+    try:
+        cursor.execute("PRAGMA table_info(carts)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'created_at' not in columns:
+            cursor.execute('ALTER TABLE carts ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
+        if 'updated_at' not in columns:
+            cursor.execute('ALTER TABLE carts ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
+            
+        # Update existing rows with current timestamp if they're NULL
+        cursor.execute('UPDATE carts SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL')
+        cursor.execute('UPDATE carts SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL')
+        
+    except Exception as e:
+        print(f"Migration warning: {e}")
 
     # new: conversation log table
     cursor.execute('''
@@ -112,20 +133,86 @@ def cancel_order(order_id):
     return "Cannot cancel: Order is not in Pending status."
 
 def save_cart(session_id, items):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('INSERT OR REPLACE INTO carts (session_id, items) VALUES (?, ?)',
-                   (session_id, json.dumps(items)))
-    conn.commit()
-    conn.close()
+    """Save cart with proper timestamp handling and error management"""
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=10.0)
+            cursor = conn.cursor()
+            
+            # Check if cart exists
+            cursor.execute('SELECT session_id FROM carts WHERE session_id = ?', (session_id,))
+            exists = cursor.fetchone()
+            
+            if exists:
+                # Update existing cart
+                cursor.execute('''
+                    UPDATE carts SET items = ?, updated_at = datetime('now') WHERE session_id = ?
+                ''', (json.dumps(items), session_id))
+            else:
+                # Insert new cart
+                cursor.execute('''
+                    INSERT INTO carts (session_id, items, created_at, updated_at) 
+                    VALUES (?, ?, datetime('now'), datetime('now'))
+                ''', (session_id, json.dumps(items)))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e).lower() and retry_count < max_retries - 1:
+                retry_count += 1
+                import time
+                time.sleep(0.1 * retry_count)  # Exponential backoff
+                continue
+            else:
+                print(f"Database error in save_cart: {e}")
+                if 'conn' in locals():
+                    conn.close()
+                return False
+        except Exception as e:
+            print(f"Unexpected error in save_cart: {e}")
+            if 'conn' in locals():
+                conn.close()
+            return False
+    
+    return False
 
 def get_cart(session_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('SELECT items FROM carts WHERE session_id = ?', (session_id,))
-    row = cursor.fetchone()
-    conn.close()
-    return json.loads(row[0]) if row else []
+    """Get cart with proper error handling"""
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            conn = sqlite3.connect(DB_PATH, timeout=10.0)
+            cursor = conn.cursor()
+            cursor.execute('SELECT items FROM carts WHERE session_id = ?', (session_id,))
+            row = cursor.fetchone()
+            conn.close()
+            return json.loads(row[0]) if row else []
+            
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e).lower() and retry_count < max_retries - 1:
+                retry_count += 1
+                import time
+                time.sleep(0.1 * retry_count)
+                continue
+            else:
+                print(f"Database error in get_cart: {e}")
+                if 'conn' in locals():
+                    conn.close()
+                return []
+        except Exception as e:
+            print(f"Unexpected error in get_cart: {e}")
+            if 'conn' in locals():
+                conn.close()
+            return []
+    
+    return []
 
 def get_sales_insights():
     conn = sqlite3.connect(DB_PATH)

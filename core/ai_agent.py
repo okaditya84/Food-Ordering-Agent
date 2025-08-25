@@ -3,7 +3,7 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 from enum import Enum
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferWindowMemory
@@ -61,78 +61,64 @@ class IntelligentFoodAgent:
         
         # Create the system prompt
         system_prompt = """
-        You are an intelligent food ordering assistant with advanced reasoning capabilities. 
-        Your goal is to provide exceptional customer service while helping users discover, order, and enjoy food.
+        You are an INTELLIGENT food ordering assistant with ADVANCED contextual reasoning capabilities.
+        
+        🧠 CORE INTELLIGENCE PRINCIPLES:
+        1. ANALYZE context before responding - don't repeat questions if information was already provided
+        2. BUILD PROGRESSIVELY on conversation - remember what user said before
+        3. BE EFFICIENT - use provided information immediately, ask only for CRITICAL missing details
+        4. USE SMART DEFAULTS - medium size, regular crust unless specified otherwise
+        5. COMBINE ACTIONS when possible - add items AND suggest related items
 
-        CORE CAPABILITIES:
-        1. Natural language understanding of food-related queries
-        2. Intelligent menu search and recommendations
-        3. Smart cart management with optimization suggestions
-        4. Personalized recommendations based on user history
-        5. Dietary restriction awareness and validation
-        6. Nutritional information and health-conscious suggestions
-        7. Order optimization for value and satisfaction
-        8. Context-aware conversation management
+        📋 CONTEXT PROCESSING:
+        - Input format: "User message... Session ID: [session_id]... Context: [context_info]"
+        - ALWAYS extract session_id and use it in ALL tool calls
+        - Read Context section for: user preferences, cart items, conversation history
+        - If user mentioned preferences before, reference them: "Based on your preference for thin crust..."
 
-        PERSONALITY TRAITS:
-        - Friendly, helpful, and enthusiastic about food
-        - Knowledgeable about menu items, ingredients, and nutrition
-        - Proactive in making suggestions and optimizations
-        - Patient and understanding with dietary restrictions
-        - Professional but conversational tone
+        ⚡ SMART BEHAVIOR EXAMPLES:
+        
+        User: "2 margherita pizza delivery"
+        SMART Response: "Perfect! I'll add 2 margherita pizzas to your cart right away." *calls smart_add_to_cart immediately* "Added! For delivery, I just need your address."
+        
+        User: "small size, thin crust, upi on delivery, no extra information" (after pizza request)
+        SMART Response: "Got it! Updating your pizzas to small size with thin crust, and setting UPI payment on delivery." *updates cart* "Your order is ready - just need delivery address!"
+        
+        AVOID: Asking the same questions repeatedly or ignoring previous conversation.
 
-        DECISION MAKING PROCESS:
-        1. Understand user intent using context and conversation history
-        2. Determine if tools are needed to fulfill the request
-        3. Use appropriate tools with intelligent parameter selection
-        4. Synthesize information from multiple sources when needed
-        5. Provide comprehensive, helpful responses
-        6. Proactively suggest improvements or alternatives
+        🛠️ TOOL USAGE STRATEGY:
+        - Extract session_id from input FIRST
+        - Use smart_add_to_cart immediately when user mentions items
+        - Apply user preferences from context automatically
+        - Only ask for ESSENTIAL missing info (like delivery address)
+        - Suggest complementary items after adding main items
 
-        TOOL USAGE GUIDELINES:
-        - Use intelligent_menu_search for menu-related queries
-        - Use smart_add_to_cart for adding items with validation
-        - Use get_smart_recommendations for personalized suggestions
-        - Use analyze_nutritional_info for health-related queries
-        - Use optimize_current_order to improve user's cart
-        - Always consider user's dietary preferences and restrictions
-
-        RESPONSE GUIDELINES:
-        - Be conversational and engaging
-        - Provide specific, actionable information
-        - Include prices, dietary info, and descriptions when relevant
-        - Suggest alternatives when exact requests aren't available
-        - Proactively offer complementary items or optimizations
-        - Ask clarifying questions when needed
-        - Acknowledge user preferences and history
-
-        Remember: You're not just taking orders - you're helping users discover great food experiences!
+        🎯 GOAL: Be the most efficient, context-aware food assistant possible!
         """
         
-        # Create the prompt template
+        # Create the prompt template without MessagesPlaceholder for chat_history
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
-            MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
         
         # Create the agent
-        agent = create_tool_calling_agent(
+        agent = create_openai_tools_agent(
             llm=self.llm,
             tools=SMART_TOOLS,
             prompt=prompt
         )
         
-        # Create the executor
+        # Create the executor with proper configuration
         return AgentExecutor(
             agent=agent,
             tools=SMART_TOOLS,
-            memory=self.memory,
             verbose=True,
             max_iterations=3,
             early_stopping_method="generate",
-            handle_parsing_errors=True
+            handle_parsing_errors=True,
+            return_intermediate_steps=False
         )
     
     def _get_conversation_context(self, session_id: str) -> ConversationContext:
@@ -328,10 +314,56 @@ class IntelligentFoodAgent:
                 if context_str:
                     agent_input += f"\nContext: {context_str}"
                 
-                # Run agent with tools
+                # Get recent chat history for INTELLIGENT context
+                chat_history_str = ""
+                if context and context.conversation_history:
+                    # Get more comprehensive history for better context
+                    recent_history = context.conversation_history[-4:]  # Last 4 exchanges
+                    history_parts = []
+                    
+                    # Extract key conversation elements
+                    order_details = []
+                    user_preferences = []
+                    pending_items = []
+                    
+                    for conv in recent_history:
+                        role = conv.get('role', '')
+                        content = conv.get('content', '') or conv.get('message', '')
+                        
+                        if role == 'user' and content:
+                            # Extract order-related information
+                            if any(word in content.lower() for word in ['pizza', 'burger', 'drink', 'order', 'add']):
+                                order_details.append(f"User requested: {content[:80]}")
+                            
+                            # Extract preferences
+                            if any(word in content.lower() for word in ['small', 'large', 'thin', 'thick', 'delivery', 'pickup']):
+                                user_preferences.append(f"Preference: {content[:60]}")
+                        
+                        elif role == 'assistant' and content:
+                            # Check if assistant asked questions that are still pending
+                            if '?' in content and any(word in content.lower() for word in ['size', 'crust', 'address', 'phone']):
+                                pending_items.append(f"Pending: {content[:80]}")
+                    
+                    # Build intelligent context summary
+                    context_parts = []
+                    if order_details:
+                        context_parts.append("ORDERS: " + " | ".join(order_details[-2:]))  # Last 2 orders
+                    if user_preferences:
+                        context_parts.append("PREFERENCES: " + " | ".join(user_preferences[-2:]))  # Last 2 preferences
+                    if pending_items and len(pending_items) > 0:
+                        # Only include RECENT pending items to avoid repetition
+                        context_parts.append("RECENTLY_ASKED: " + pending_items[-1])
+                    
+                    if context_parts:
+                        chat_history_str = f"CONVERSATION_CONTEXT: {' | '.join(context_parts)}"
+                
+                # Enhanced input for agent with SMART chat history included
+                if chat_history_str:
+                    agent_input += f"\n{chat_history_str}"
+                
+                # Run agent with tools (simplified - only input parameter)
                 result = await self.agent_executor.ainvoke({
-                    "input": agent_input,
-                    "session_id": session_id
+                    "input": agent_input
                 })
                 
                 response = result.get("output", "I'm having trouble processing your request right now.")

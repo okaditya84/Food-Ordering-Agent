@@ -14,6 +14,13 @@ from core.knowledge_retrieval import search_menu
 from core.recommendation_engine import get_personalized_recommendations, analyze_user_preferences
 from core.natural_language_processor import process_user_input
 
+def extract_session_id_from_input(input_text: str) -> str:
+    """Extract session_id from input text that contains 'Session ID: [session_id]'"""
+    session_match = re.search(r'Session ID:\s*([a-f0-9\-]+)', input_text)
+    if session_match:
+        return session_match.group(1)
+    return ""
+
 @dataclass
 class OrderOptimization:
     original_total: float
@@ -253,6 +260,10 @@ def intelligent_menu_search(query: str, session_id: str = "", dietary_preference
     Handles natural language queries about food items, categories, dietary restrictions, etc.
     """
     try:
+        # Extract session_id from query if not provided
+        if not session_id:
+            session_id = extract_session_id_from_input(query)
+        
         # Parse dietary preferences
         dietary_prefs = [pref.strip() for pref in dietary_preferences.split(',')] if dietary_preferences else []
         
@@ -271,18 +282,79 @@ def intelligent_menu_search(query: str, session_id: str = "", dietary_preference
 @tool
 def smart_add_to_cart(session_id: str, items_description: str, dietary_preferences: str = "") -> str:
     """
-    Intelligently add items to cart with AI-powered item recognition and validation.
-    Handles natural language descriptions and suggests alternatives if needed.
+    Intelligently add items to cart with AI-powered item recognition, context awareness, and smart defaults.
+    Handles natural language descriptions and applies user preferences from conversation history.
     """
     try:
-        # Use NLU to extract items
+        # Extract session_id from items_description if not provided
+        if not session_id:
+            session_id = extract_session_id_from_input(items_description)
+        
+        # Get conversation context to apply previous preferences
+        from database import get_conversations
+        recent_conversations = get_conversations(session_id, limit=6)
+        
+        # Extract user preferences from recent conversation
+        size_preference = None
+        crust_preference = None
+        delivery_mode = None
+        
+        for conv in recent_conversations:
+            content = conv.get('content', '').lower()
+            if conv.get('role') == 'user':
+                # Extract size preferences
+                if 'small' in content:
+                    size_preference = 'small'
+                elif 'large' in content:
+                    size_preference = 'large'
+                elif 'medium' in content:
+                    size_preference = 'medium'
+                
+                # Extract crust preferences
+                if 'thin' in content:
+                    crust_preference = 'thin'
+                elif 'thick' in content:
+                    crust_preference = 'thick'
+                
+                # Extract delivery preferences
+                if 'delivery' in content:
+                    delivery_mode = 'delivery'
+                elif 'pickup' in content:
+                    delivery_mode = 'pickup'
+        
+        # Use NLU to extract items with smart defaults
         nlu_result = process_user_input(f"add {items_description}", session_id)
         
         if not nlu_result.get('menu_items'):
-            return f"I couldn't identify specific menu items from '{items_description}'. Could you be more specific? For example: 'add 2 margherita pizzas' or 'add chicken burger'."
+            # Try to intelligently parse simple requests like "2 pizzas", "margherita pizza"
+            import re
+            
+            # Extract quantity and item name
+            quantity_match = re.search(r'(\d+)\s*(.+)', items_description.strip())
+            if quantity_match:
+                quantity = int(quantity_match.group(1))
+                item_name = quantity_match.group(2).strip()
+            else:
+                quantity = 1
+                item_name = items_description.strip()
+            
+            # Find best matching menu item
+            found_item = smart_order_manager.find_menu_item(item_name)
+            
+            if not found_item:
+                return f"I couldn't find '{item_name}' on our menu. Let me search for similar items..."
+            
+            # Create a standardized menu items list
+            nlu_result = {
+                'menu_items': [{
+                    'name': found_item['name'],
+                    'quantity': quantity
+                }]
+            }
         
         cart = get_cart(session_id)
         added_items = []
+        applied_preferences = []
         
         # Parse dietary preferences
         dietary_prefs = [pref.strip() for pref in dietary_preferences.split(',')] if dietary_preferences else []
@@ -297,39 +369,72 @@ def smart_add_to_cart(session_id: str, items_description: str, dietary_preferenc
             if not found_item:
                 return f"I couldn't find '{item_name}' on our menu. Would you like me to suggest similar items?"
             
+            # Apply smart defaults based on conversation context
+            item_details = {'name': found_item['name']}
+            
+            # Apply size preference if this is a pizza/item that has sizes
+            if size_preference and 'pizza' in found_item['name'].lower():
+                item_details['size'] = size_preference
+                applied_preferences.append(f"{size_preference} size")
+            
+            # Apply crust preference for pizzas
+            if crust_preference and 'pizza' in found_item['name'].lower():
+                item_details['crust'] = crust_preference
+                applied_preferences.append(f"{crust_preference} crust")
+            
             # Validate dietary restrictions
             if dietary_prefs:
                 validation = smart_order_manager.validate_dietary_restrictions([{'name': found_item['name']}], dietary_prefs)
                 if not validation['is_compliant']:
                     return f"Warning: {found_item['name']} doesn't meet your dietary preferences: {', '.join(validation['violations'])}. Would you like me to suggest alternatives?"
             
-            # Add to cart
+            # Add to cart with preferences
             existing_item = next((item for item in cart if item['name'].lower() == found_item['name'].lower()), None)
             
             if existing_item:
                 existing_item['quantity'] += quantity
+                # Update preferences if new ones were applied
+                if applied_preferences:
+                    existing_item.update(item_details)
             else:
-                cart.append({
+                cart_item = {
                     'name': found_item['name'],
                     'price': found_item['price'],
                     'quantity': quantity
-                })
+                }
+                cart_item.update(item_details)
+                cart.append(cart_item)
             
-            added_items.append(f"{quantity}x {found_item['name']} (${found_item['price']:.2f} each)")
+            # Format the added item description with preferences
+            item_desc = f"{quantity}x {found_item['name']}"
+            if applied_preferences:
+                item_desc += f" ({', '.join(applied_preferences)})"
+            item_desc += f" (${found_item['price']:.2f} each)"
+            added_items.append(item_desc)
         
-        save_cart(session_id, cart)
+        # Save cart with robust error handling
+        save_result = save_cart(session_id, cart)
+        if not save_result:
+            return "⚠️ I had trouble saving your cart. Please try again in a moment."
         
         # Calculate new total
         total = sum(item['price'] * item['quantity'] for item in cart)
         
-        # Suggest complementary items
-        suggestions = smart_order_manager.suggest_complementary_items(cart, k=2)
-        suggestion_text = ""
-        if suggestions:
-            suggestion_names = [item['name'] for item in suggestions]
-            suggestion_text = f"\n\nYou might also like: {', '.join(suggestion_names)}"
+        # Create response
+        response = f"✅ Added to cart: {'; '.join(added_items)}"
         
-        return f"Added to cart: {'; '.join(added_items)}\nCart total: ${total:.2f}{suggestion_text}"
+        if applied_preferences:
+            response += f"\n🎯 Applied your preferences: {', '.join(set(applied_preferences))}"
+        
+        response += f"\n💰 Cart total: ${total:.2f}"
+        
+        # Add delivery mode if detected
+        if delivery_mode:
+            response += f"\n🚚 For {delivery_mode}"
+            if delivery_mode == 'delivery':
+                response += " - I'll need your address when you're ready to order"
+        
+        return response
         
     except Exception as e:
         return f"I had trouble adding items to your cart. Error: {str(e)}"
